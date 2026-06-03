@@ -1,0 +1,44 @@
+name: prompto
+description: "Prompto — Duolingo for AI skills. Micro-lessons for prompt engineering with a live, AI-graded Prompt Lab."
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+  flutter: ">=3.27.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management — chosen over Bloc for this app's mostly-derive + few async controllers.
+  flutter_riverpod: ^2.6.1
+
+  # Declarative navigation with deep-link support and a ShellRoute for the bottom nav.
+  go_router: ^14.6.2
+
+  # Date helpers for streak math / formatting (keeps logic locale-friendly).
+  # Broad range so it co-resolves with whatever the Flutter SDK pins.
+  intl: ">=0.19.0 <0.21.0"
+
+  # iOS-style icons used by adaptive components.
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  # Asset folder is declared so future illustrations/onboarding art drop in without config changes.
+  assets:
+    - assets/images/
+
+# --- Notes for the next developer -------------------------------------------------
+# Local persistence: the prototype uses an in-memory LocalStore (see lib/data/sources).
+# For real persistence add Drift (recommended) and build_runner:
+#   drift: ^2.x
+#   drift_flutter: ^0.x
+#   dev: drift_dev, build_runner
+# Networking (real LLM grading): add `dio` and implement an ApiPromptEvaluationRepository.
