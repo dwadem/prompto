@@ -1,0 +1,43 @@
+name: CI
+
+# Runs the first *real* compile of the cross-platform code on every PR and on
+# pushes to main: dependency resolution, static analysis, and unit tests.
+# No platform folders are needed for analyze/test, so this is fast.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Cancel superseded runs on the same ref to save CI minutes.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze-and-test:
+    name: Analyze & test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          # Pin a channel for reproducibility; bump as needed (project needs 3.27+).
+          channel: stable
+          cache: true
+
+      - name: Print versions
+        run: flutter --version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test --reporter expanded
