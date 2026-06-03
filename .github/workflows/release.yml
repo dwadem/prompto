@@ -1,0 +1,56 @@
+name: Release build (Android)
+
+# Builds installable Android artifacts (APK + App Bundle) on a version tag
+# (e.g. `git tag v0.1.0 && git push --tags`) or via manual dispatch.
+#
+# NOTE: the android/ folder is git-ignored in this prototype, so the workflow
+# regenerates it with `flutter create`. The resulting binaries are signed with
+# the DEBUG key — fine for sharing/testing, but NOT uploadable to Google Play.
+# See DEPLOYMENT.md for wiring a real release keystore + Play upload.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: Build APK + AAB
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java (required by Gradle)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate Android platform folder
+        # Regenerates the git-ignored android/ runner. Use a stable org/app id.
+        run: flutter create --platforms=android --org com.prompto --project-name prompto .
+
+      - name: Build release APK
+        run: flutter build apk --release
+
+      - name: Build release App Bundle
+        run: flutter build appbundle --release
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: prompto-android-${{ github.ref_name }}
+          if-no-files-found: error
+          path: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab

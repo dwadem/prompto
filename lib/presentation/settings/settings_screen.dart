@@ -39,21 +39,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: ListView(
         children: [
           const _SectionHeader('Appearance'),
-          for (final entry in const {
-            ThemeMode.system: 'System default',
-            ThemeMode.light: 'Light',
-            ThemeMode.dark: 'Dark',
-          }.entries)
-            RadioListTile<ThemeMode>(
-              value: entry.key,
-              groupValue: themeMode,
-              title: Text(entry.value),
-              onChanged: (mode) {
-                if (mode != null) {
-                  ref.read(themeModeProvider.notifier).set(mode);
-                }
+          // SegmentedButton is the Material 3 single-select control and avoids
+          // the Radio group-value APIs deprecated after Flutter 3.32.
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SegmentedButton<ThemeMode>(
+              segments: const [
+                ButtonSegment(
+                  value: ThemeMode.system,
+                  label: Text('System'),
+                  icon: Icon(Icons.brightness_auto),
+                ),
+                ButtonSegment(
+                  value: ThemeMode.light,
+                  label: Text('Light'),
+                  icon: Icon(Icons.light_mode),
+                ),
+                ButtonSegment(
+                  value: ThemeMode.dark,
+                  label: Text('Dark'),
+                  icon: Icon(Icons.dark_mode),
+                ),
+              ],
+              selected: {themeMode},
+              onSelectionChanged: (selection) {
+                ref.read(themeModeProvider.notifier).set(selection.first);
               },
             ),
+          ),
           const Divider(),
           const _SectionHeader('Daily goal'),
           ListTile(

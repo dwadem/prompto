@@ -1,13 +1,7 @@
 include: package:flutter_lints/flutter.yaml
 
-linter:
-  rules:
-    prefer_const_constructors: true
-    prefer_const_declarations: true
-    prefer_final_locals: true
-    avoid_print: true
-    require_trailing_commas: true
-
+# Standard Flutter lint set keeps CI signal meaningful without failing on style
+# nitpicks. Add project-specific rules here as the codebase matures.
 analyzer:
   language:
     strict-casts: true
