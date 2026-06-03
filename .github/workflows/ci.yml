@@ -37,7 +37,9 @@ jobs:
         run: flutter pub get
 
       - name: Analyze
-        run: flutter analyze
+        # Errors and warnings fail the build; style-only infos (e.g.
+        # prefer_const_constructors) are reported but non-fatal.
+        run: flutter analyze --no-fatal-infos
 
       - name: Run tests
         run: flutter test --reporter expanded
