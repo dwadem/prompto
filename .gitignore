@@ -23,3 +23,7 @@ pubspec.lock
 
 # OS
 .DS_Store
+
+# Python bytecode cache
+__pycache__/
+*.pyc

@@ -41,8 +41,10 @@ The run produces, as downloadable artifacts:
 - `app-release.apk` — sideloadable for quick testing.
 - `app-release.aab` — the App Bundle format Google Play expects.
 
-> ⚠️ **These are DEBUG-signed.** They install and run fine for testing but are
-> **not** accepted by the Play Store. Wire real signing (below) before publishing.
+> **Signing:** if the keystore secrets in §3 are configured, the workflow signs
+> release builds with your **upload key** automatically. If they're absent, it
+> falls back to **DEBUG signing** — fine for testing, but not accepted by the
+> Play Store. No credential ever lives in the repo; secrets are read at runtime.
 
 ---
 
@@ -69,8 +71,7 @@ keytool -genkey -v -keystore upload-keystore.jks \
   -keyalg RSA -keysize 2048 -validity 10000 -alias upload
 ```
 
-Reference it from `android/key.properties` (git-ignored) and the release
-`signingConfig` in `build.gradle`. See Flutter's
+Keep this file **out of the repo**. See Flutter's
 [“Build and release an Android app”](https://docs.flutter.dev/deployment/android).
 
 ### 3.3 Store secrets in GitHub
@@ -79,7 +80,18 @@ Repo → **Settings → Secrets and variables → Actions**:
 - `ANDROID_KEYSTORE_BASE64` — `base64 -w0 upload-keystore.jks`
 - `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`
 - `PLAY_SERVICE_ACCOUNT_JSON` — a Google Play service-account key with
-  *Release manager* access (for automated upload).
+  *Release manager* access (only needed later, for automated upload).
+
+> 🔒 Create these yourself and paste them **only** into GitHub's encrypted
+> secrets — never into source, chat, or logs. CI reads them at build time.
+
+### 3.3a How signing is wired (automatic)
+`release.yml` already handles signing: when `ANDROID_KEYSTORE_BASE64` is set it
+decodes the keystore, writes `android/key.properties`, and runs
+`scripts/configure_android_signing.py` to inject a release `signingConfig` into
+the generated `android/app/build.gradle.kts`. With no secret it debug-signs.
+If you later commit a permanent `android/` folder, move that signing block into
+`build.gradle.kts` directly and drop the patch step.
 
 ### 3.4 Sign + upload in the workflow
 In `release.yml`, after building, decode the keystore from the secret, write

@@ -4,9 +4,16 @@ name: Release build (Android)
 # (e.g. `git tag v0.1.0 && git push --tags`) or via manual dispatch.
 #
 # NOTE: the android/ folder is git-ignored in this prototype, so the workflow
-# regenerates it with `flutter create`. The resulting binaries are signed with
-# the DEBUG key — fine for sharing/testing, but NOT uploadable to Google Play.
-# See DEPLOYMENT.md for wiring a real release keystore + Play upload.
+# regenerates it with `flutter create`. Release builds are signed with an upload
+# keystore IF the signing secrets below are configured; otherwise they fall back
+# to DEBUG signing (fine for testing, NOT uploadable to Google Play).
+#
+# Required repo secrets for real signing (Settings → Secrets and variables → Actions):
+#   ANDROID_KEYSTORE_BASE64   base64 of your upload-keystore.jks (`base64 -w0 ...`)
+#   ANDROID_KEYSTORE_PASSWORD store password
+#   ANDROID_KEY_ALIAS         key alias (e.g. "upload")
+#   ANDROID_KEY_PASSWORD      key password
+# See DEPLOYMENT.md for how to create these.
 
 on:
   push:
@@ -22,6 +29,10 @@ jobs:
   build-android:
     name: Build APK + AAB
     runs-on: ubuntu-latest
+    # Mapped here so the signing step's `if:` can detect whether a keystore is
+    # configured. Secrets are masked in logs.
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -44,6 +55,25 @@ jobs:
       - name: Generate Android platform folder
         # Regenerates the git-ignored android/ runner. Use a stable org/app id.
         run: flutter create --platforms=android --org com.prompto --project-name prompto .
+
+      - name: Configure release signing
+        # Runs only when a keystore secret is present; otherwise the build below
+        # falls back to the template's default debug signing.
+        if: env.ANDROID_KEYSTORE_BASE64 != ''
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+          cat > android/key.properties <<EOF
+          storeFile=${GITHUB_WORKSPACE}/android/app/upload-keystore.jks
+          storePassword=${ANDROID_KEYSTORE_PASSWORD}
+          keyAlias=${ANDROID_KEY_ALIAS}
+          keyPassword=${ANDROID_KEY_PASSWORD}
+          EOF
+          python3 scripts/configure_android_signing.py android/app/build.gradle.kts
 
       - name: Build release APK
         run: flutter build apk --release
