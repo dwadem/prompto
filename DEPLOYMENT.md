@@ -64,6 +64,19 @@ git add android && git commit -m "Add Android platform config"
 Set a real `applicationId`, `versionCode`/`versionName`, and target SDK in
 `android/app/build.gradle(.kts)`.
 
+**Launcher icon.** The source art lives in `assets/icon/` (regenerate with
+`python3 scripts/generate_icon.py`). After the platform folders exist, generate
+the per-density icons:
+
+```bash
+dart run flutter_launcher_icons
+```
+
+For the Play **store listing** (separate from the launcher icon) export a 512×512
+PNG. Listing copy, required graphics, and the data-safety/content-rating checklist
+are in `docs/STORE_LISTING.md`; a privacy-policy template is in
+`docs/PRIVACY_POLICY.md` (host it and paste the URL into the console).
+
 ### 3.2 Create an upload keystore
 
 ```bash
