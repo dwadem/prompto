@@ -29,6 +29,25 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^4.0.0
 
+  # Generates platform launcher icons from a single source image.
+  # Run after platform folders exist:  dart run flutter_launcher_icons
+  flutter_launcher_icons: ^0.14.1
+
+# App launcher icon configuration (consumed by flutter_launcher_icons).
+flutter_launcher_icons:
+  image_path: "assets/icon/icon.png"
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  min_sdk_android: 21
+  # Android adaptive icon: brand-teal background + the white "[>_]" foreground.
+  adaptive_icon_background: "#12A594"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+  web:
+    generated: true
+    background_color: "#12A594"
+    theme_color: "#12A594"
+
 flutter:
   uses-material-design: true
   # Asset folder is declared so future illustrations/onboarding art drop in without config changes.
